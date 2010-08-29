@@ -36,9 +36,14 @@ sub register {
 	$app->renderer->add_helper(
 		render_mail => sub {
 			my $self = shift;
-			my $args = { @_ };
+
+			# Template name can be given as single argument or as hash value of 'template' key
+			my $template;
+			$template = shift if (@_ % 2 && !ref $_[0]) || (!@_ % 2 && ref $_[1]);
+			my $args = ref $_[0] ? $_[0] : {@_};
+			$args->{'template'} = $template if $template;
 			
-			my $data = $self->render_partial(@_, format => 'mail');
+			my $data = $self->render_partial(%{$args}, format => 'mail');
 			
 			delete @{$self->stash}{ qw(partial mojo.content mojo.rendered format), keys %$args };
 			return $data;
